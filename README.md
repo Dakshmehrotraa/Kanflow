@@ -44,22 +44,35 @@ authentication with role-based access control.
 
 | Layer     | Technology |
 |-----------|------------|
-| Frontend  | Vanilla JS SPA (self-contained, zero-build) with a custom glassmorphism design system |
+| Frontend (demo) | Vanilla JS SPA (self-contained, zero-build) — the live GitHub Pages demo |
+| Frontend (app)  | **React 18 + Vite**, Context API global state, reusable component architecture — consumes the REST API |
 | Backend   | Node.js · Express (REST API) |
 | Database  | MongoDB · Mongoose ODM |
 | Auth      | JSON Web Tokens (stateless) · bcrypt password hashing |
 | Access    | Role-based middleware with per-workspace resource isolation |
 
-> The live demo runs the **frontend** on in-browser state so it needs no server.
-> The **`/server`** folder is the production REST API that backs the same data model.
+> **Two frontends, same design system:** `index.html` is the zero-build demo that
+> runs on in-browser state (no server needed — it's what GitHub Pages serves).
+> **`/client`** is the production **React** app that talks to the live REST API in
+> **`/server`**. Pick whichever you want to run.
 
 ## 📁 Project Structure
 
 ```
 Kanflow/
-├── index.html              # Frontend SPA (the live demo)
+├── index.html              # Zero-build demo SPA (the live GitHub Pages demo)
 ├── docs/
 │   └── screenshot.png
+├── client/                 # React 18 + Vite frontend (consumes the API)
+│   ├── index.html
+│   ├── vite.config.js      #   dev server + /api proxy to the backend
+│   └── src/
+│       ├── main.jsx · App.jsx · index.css   # entry + design system
+│       ├── api/            #   fetch client + typed endpoint helpers (auth/workspaces/cards)
+│       ├── context/        #   AuthContext, BoardContext (useReducer), ToastContext
+│       ├── hooks/          #   useTheme
+│       ├── components/     #   Sidebar, Topbar, StatBar, Board, Column, CardItem, CardModal, AuthScreen
+│       └── utils/          #   helpers + native drag-and-drop logic
 └── server/                 # REST API
     ├── server.js           # App entry — middleware, routes, error handling
     ├── config/db.js        # MongoDB connection
@@ -78,17 +91,15 @@ Kanflow/
 
 ## 🚀 Getting Started
 
-### Frontend (the live app)
+### 1 · Zero-build demo
 
-It’s a single self-contained file — just open it:
+The root `index.html` is a single self-contained file — just open it:
 
 ```bash
-# any static server works, e.g.
-npx serve .
-# or simply open index.html in a browser
+npx serve .          # or simply open index.html in a browser
 ```
 
-### Backend (REST API)
+### 2 · Backend (REST API)
 
 **Prerequisites:** Node.js 18+ and a MongoDB instance (local or Atlas).
 
@@ -96,11 +107,24 @@ npx serve .
 cd server
 npm install
 cp .env.example .env          # then edit MONGO_URI and JWT_SECRET
-npm run seed                  # optional: load demo data
+npm run seed                  # optional: load demo data (demo@kanflow.app / demo123)
 npm run dev                   # starts on http://localhost:5000
 ```
 
 Health check: `GET http://localhost:5000/api/health`
+
+### 3 · React client
+
+With the backend running, start the React app in a second terminal:
+
+```bash
+cd client
+npm install
+npm run dev                   # http://localhost:5173
+```
+
+Vite proxies `/api/*` to the backend automatically (see `vite.config.js`), so
+just register an account in the UI and your boards persist to MongoDB.
 
 ## 📡 API Reference
 
@@ -147,7 +171,7 @@ curl -X POST http://localhost:5000/api/workspaces \
 
 ## 🗺️ Roadmap
 
-- [ ] React frontend with context-based global state (consuming this API)
+- [x] React frontend with context-based global state (consuming this API)
 - [ ] Real-time board sync via WebSockets
 - [ ] Member invites by email + activity feed
 - [ ] File attachments on cards
